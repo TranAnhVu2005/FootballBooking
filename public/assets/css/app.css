@@ -1,0 +1,35 @@
+:root {
+    --primary-color: #28a745;
+    --dark-color: #343a40;
+}
+
+body {
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.navbar-brand {
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.hero {
+    background: url('https://c.wallhere.com/photos/6e/33/stadium_Real_Madrid_Santiago_Bernabeu_Stadium_soccer-133298.jpg!d') center/cover no-repeat;
+    height: 90vh;
+    display: flex;
+    align-items: center;
+    color: white;
+    position: relative;
+}
+
+.hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+}
+
+.hero-content {
+    position: relative;
+    z-index: 1;
+}

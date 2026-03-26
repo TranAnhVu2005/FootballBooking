@@ -1,0 +1,153 @@
+CREATE DATABASE "FootballBooking";
+DROP TABLE IF EXISTS REVIEWS;
+DROP TABLE IF EXISTS BOOKINGS;
+DROP TABLE IF EXISTS SLOT_TEMPLATES;
+DROP TABLE IF EXISTS FIELDS;
+select * from FIELD_SLOTS;
+DROP TABLE IF EXISTS FIELD_TYPES;
+DROP TABLE IF EXISTS USERS;
+DROP TABLE IF EXISTS FIELD_SLOTS; 
+
+select * from FIELDS;
+
+select * from FIELD_SLOTS;
+select * from users;
+delete from users where user_id = 20;
+
+CREATE TABLE USERS (
+    USER_ID     SERIAL       NOT NULL,
+    FULL_NAME   VARCHAR(100),
+    EMAIL       VARCHAR(100) NOT NULL,
+    PASSWORD    VARCHAR(255),
+    PHONE       VARCHAR(20),
+    ROLE        VARCHAR(20),
+    STATUS      VARCHAR(20),
+    CREATED_AT  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UPDATED_AT  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	AVATAR 		VARCHAR(255),
+    PRIMARY KEY (USER_ID)
+);
+
+select * from users;
+delete from users where user_id = 10;
+delete from reviews;
+delete from BOOKINGS;
+
+CREATE TABLE FIELD_TYPES (
+    TYPE_ID     VARCHAR(36)  NOT NULL,
+    TYPE_NAME   VARCHAR(100),
+    DESCRIPTION TEXT,
+    PRIMARY KEY (TYPE_ID)
+);
+
+CREATE TABLE FIELDS (
+    FIELD_ID    VARCHAR(36)  NOT NULL,
+    USER_ID     INT          NOT NULL,
+    TYPE_ID     VARCHAR(36)  NOT NULL,
+    FIELD_NAME  VARCHAR(100),
+    ADDRESS     VARCHAR(255),
+    DESCRIPTION TEXT,
+    IMAGE       VARCHAR(255),
+    STATUS      VARCHAR(20),
+    CREATED_AT  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (FIELD_ID),
+    FOREIGN KEY (USER_ID)  REFERENCES USERS(USER_ID),
+    FOREIGN KEY (TYPE_ID)  REFERENCES FIELD_TYPES(TYPE_ID)
+);
+
+
+
+-- Admin tạo 1 lần, dùng cho tất cả sân
+CREATE TABLE SLOT_TEMPLATES (
+    TEMPLATE_ID  VARCHAR(36) PRIMARY KEY,
+    START_TIME   TIME NOT NULL,
+    END_TIME     TIME NOT NULL,
+    LABEL        VARCHAR(50)  -- "Ca sáng", "Ca chiều", "Ca tối"
+);
+
+
+CREATE TABLE FIELD_SLOTS (
+    FIELD_SLOT_ID  VARCHAR(36)    NOT NULL,
+    FIELD_ID       VARCHAR(36)    NOT NULL,
+    TEMPLATE_ID    VARCHAR(36)    NOT NULL,
+    PRICE          DECIMAL(12,2),
+    IS_ACTIVE      BOOLEAN        DEFAULT TRUE,
+    PRIMARY KEY (FIELD_SLOT_ID),
+    FOREIGN KEY (FIELD_ID)    REFERENCES FIELDS(FIELD_ID),
+    FOREIGN KEY (TEMPLATE_ID) REFERENCES SLOT_TEMPLATES(TEMPLATE_ID),
+    UNIQUE (FIELD_ID, TEMPLATE_ID)   -- 1 sân không được trùng slot
+);
+
+CREATE TABLE BOOKINGS (
+    BOOKING_ID      VARCHAR(36)   NOT NULL,
+    USER_ID         INT           NOT NULL,
+    FIELD_ID        VARCHAR(36)   NOT NULL,
+    SLOT_ID         VARCHAR(36)   NOT NULL,
+    BOOKING_DATE    DATE,
+    TOTAL_PRICE     DECIMAL(12, 2),
+    PAYMENT_METHOD  VARCHAR(50),
+    PAYMENT_STATUS  VARCHAR(20),
+    STATUS          VARCHAR(20),
+    NOTE            TEXT,
+    CREATED_AT      TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+    UPDATED_AT      TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (BOOKING_ID),
+    FOREIGN KEY (USER_ID)   REFERENCES USERS(USER_ID),
+    FOREIGN KEY (FIELD_ID)  REFERENCES FIELDS(FIELD_ID),
+    FOREIGN KEY (SLOT_ID)   REFERENCES FIELD_SLOTS(FIELD_SLOT_ID),
+	-- Chống double booking: cùng sân + cùng slot + cùng ngày chỉ được đặt 1 lần
+    UNIQUE (FIELD_ID, SLOT_ID, BOOKING_DATE)
+);
+
+CREATE TABLE REVIEWS (
+    REVIEW_ID   VARCHAR(36)  NOT NULL,
+    USER_ID     INT          NOT NULL,
+    FIELD_ID    VARCHAR(36)  NOT NULL,
+    CONTENT     TEXT,
+    CREATED_AT  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (REVIEW_ID),
+    FOREIGN KEY (USER_ID)   REFERENCES USERS(USER_ID),
+    FOREIGN KEY (FIELD_ID)  REFERENCES FIELDS(FIELD_ID)
+);
+
+
+
+
+INSERT INTO FIELD_SLOTS (FIELD_SLOT_ID, FIELD_ID, TEMPLATE_ID, PRICE, IS_ACTIVE)
+SELECT
+    CONCAT('FS-', f.field_id, '-', st.template_id),
+    f.field_id,
+    st.template_id,
+    CASE
+        -- Sân 5 người (FT001)
+        WHEN f.type_id = 'FT001' AND st.template_id IN ('ST01','ST02','ST03','ST04') THEN 120000
+        WHEN f.type_id = 'FT001' AND st.template_id IN ('ST05','ST06','ST07','ST08') THEN 160000
+        WHEN f.type_id = 'FT001' AND st.template_id IN ('ST09','ST10','ST11','ST12') THEN 200000
+
+        -- Sân 7 người (FT002)
+        WHEN f.type_id = 'FT002' AND st.template_id IN ('ST01','ST02','ST03','ST04') THEN 150000
+        WHEN f.type_id = 'FT002' AND st.template_id IN ('ST05','ST06','ST07','ST08') THEN 200000
+        WHEN f.type_id = 'FT002' AND st.template_id IN ('ST09','ST10','ST11','ST12') THEN 250000
+
+        -- Sân 11 người (FT003)
+        WHEN f.type_id = 'FT003' AND st.template_id IN ('ST01','ST02','ST03','ST04') THEN 300000
+        WHEN f.type_id = 'FT003' AND st.template_id IN ('ST05','ST06','ST07','ST08') THEN 400000
+        WHEN f.type_id = 'FT003' AND st.template_id IN ('ST09','ST10','ST11','ST12') THEN 500000
+
+        -- Sân futsal (FT004)
+        WHEN f.type_id = 'FT004' AND st.template_id IN ('ST01','ST02','ST03','ST04') THEN 170000
+        WHEN f.type_id = 'FT004' AND st.template_id IN ('ST05','ST06','ST07','ST08') THEN 220000
+        WHEN f.type_id = 'FT004' AND st.template_id IN ('ST09','ST10','ST11','ST12') THEN 270000
+
+        -- Sân cỏ nhân tạo (FT007)
+        WHEN f.type_id = 'FT007' AND st.template_id IN ('ST01','ST02','ST03','ST04') THEN 130000
+        WHEN f.type_id = 'FT007' AND st.template_id IN ('ST05','ST06','ST07','ST08') THEN 170000
+        WHEN f.type_id = 'FT007' AND st.template_id IN ('ST09','ST10','ST11','ST12') THEN 210000
+
+        ELSE 150000
+    END,
+    TRUE
+
+FROM FIELDS f
+CROSS JOIN SLOT_TEMPLATES st;
+

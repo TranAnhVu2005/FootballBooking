@@ -1,0 +1,5 @@
+# Force all .php files to be detected as PHP
+*.php linguist-language=PHP
+# Mark composer-setup.php as vendored/generated so it's excluded from stats
+composer-setup.php linguist-vendored
+composer.lock linguist-generated

@@ -1,0 +1,46 @@
+<IfModule mod_rewrite.c>
+    Options -MultiViews
+    RewriteEngine On
+
+    # Chuyển hướng HTTPS (Bỏ ghi chú để sử dụng nếu triển khai có chứng chỉ SSL hoặc dùng Cloudflare)
+    # RewriteCond %{HTTPS} off
+    # RewriteCond %{HTTP:X-Forwarded-Proto} !https
+    # RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^ index.php [QSA,L]
+</IfModule>
+
+# Cấu hình Web Server HTTP Caching cho tài nguyên tĩnh
+<IfModule mod_expires.c>
+    ExpiresActive On
+
+    # Mặc định
+    ExpiresDefault "access plus 1 month"
+
+    # Hình ảnh
+    ExpiresByType image/jpg "access plus 1 year"
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/gif "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/webp "access plus 1 year"
+    ExpiresByType image/svg+xml "access plus 1 year"
+    ExpiresByType image/x-icon "access plus 1 year"
+
+    # CSS / JS
+    ExpiresByType text/css "access plus 1 year"
+    ExpiresByType application/javascript "access plus 1 year"
+    ExpiresByType application/x-javascript "access plus 1 year"
+    ExpiresByType text/javascript "access plus 1 year"
+</IfModule>
+
+# Cấu hình Cache-Control cho tài nguyên tĩnh
+<IfModule mod_headers.c>
+    <FilesMatch "\.(ico|jpeg|jpg|png|gif|webp|svg|css|js)$">
+        Header set Cache-Control "max-age=31536000, public"
+    </FilesMatch>
+    
+    # Bật ETag cho các tài nguyên tĩnh
+    FileETag MTime Size
+</IfModule>
